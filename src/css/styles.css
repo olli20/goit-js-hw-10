@@ -25,7 +25,7 @@ body {
   height: 60px;
   min-width: 380px;
   max-width: 500px;
-  margin-bottom: 10px;
+  margin-bottom: 35px;
 }
 
 .country-info__title-container {
@@ -58,4 +58,19 @@ body {
 
 .country-info__list-key {
   font-weight: 700;
+}
+
+.country-list__list-item {
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+}
+
+.country-list__flag {
+    display: block;
+    margin-right: 15px;
+}
+
+.country-list__list-item:not(:last-child) {
+  margin-bottom: 5px;
 }

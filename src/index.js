@@ -1,5 +1,6 @@
 import './css/styles.css';
 var debounce = require('lodash.debounce');
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const DEBOUNCE_DELAY = 300;
 
@@ -9,12 +10,10 @@ const refs = {
     info: document.querySelector('.country-info'),
 };
 
-
 const handleInput = (event) => {
     event.preventDefault();
     
     const query = event.target.value.trim();
-    console.log(query);
 
     if (query === "") {
         clearHTML();
@@ -23,65 +22,54 @@ const handleInput = (event) => {
 
     fetchCountries(query)
         .then(handleResponse)
-        .catch(error => console.log("Error"));
+        .catch(onError);
 };
 
 refs.input.addEventListener('input', debounce(handleInput, DEBOUNCE_DELAY));
 
-
-
-
-// відправляємо запит і отримуємо відповідь сервера
-const fetchCountries = (query) => {
-    return fetch(`https://restcountries.com/v3.1/name/${query}?fields=name,capital,population,flags,languages`)
+// fetch data
+const fetchCountries = (name) => {
+    return fetch(`https://restcountries.com/v3.1/name/${name}?fields=name,capital,population,flags,languages`)
         .then(r => r.json());
 };
 
-// перевіряємо відповідь сервера і вибираємо дію
 const handleResponse = (response) => {
-    // якщо пришла помилка 404
+    if (response.status === 404) {
+        clearHTML();
+        on404();
+        return;
+    }
 
-
-    // якщо повернувся масив з однією країною
     if (response.length === 1) {
+        clearHTML();
+        const countryData = getCountryData(response);
+        renderCountryCard(countryData);
 
-        // очищюємо в HTML елемент зі списком країн
-        refs.list.innerHTML = "";
+    } else if (response.length > 1 && response.length <= 10) {
+        clearHTML();
+        renderCountriesList(response);
 
-        // формуємо об'єкт з даними про країну
-        const countryData = {
+    } else if (response.length > 10) {        
+       onOverload();
+    };
+};
+
+// one counttry card
+const renderCountryCard = (countryData) => {
+    const markup = getCountryCardTemplate(countryData);
+    refs.info.innerHTML = markup;
+};
+
+const getCountryData = (response) => {
+    return {
             commonName: response[0].name.common,
             capital: response[0].capital.join(", "),
             population: response[0].population,
             flag: response[0].flags.svg,
             languages: Object.values(response[0].languages).join(", "),
         };
+}
 
-        renderCountryCard(countryData);
-
-        console.log('One country ', countryData);
-
-    // якщо повернулось від 2 до 10 країн
-    } else if (response.length > 1 && response.length <= 10) {
-        refs.info.innerHTML = "";
-
-        renderCountriesList(response);
-
-        console.log('2 - 10 countries ');
-
-    // якщо повернулось більше 10 країн
-    } else if (response.length > 10) {        
-        console.log('Too many matches found. Please enter a more specific name.');
-    };
-};
-
-// рендеримо розмітку однієї країни
-const renderCountryCard = (countryData) => {
-    const markup = getCountryCardTemplate(countryData);
-    refs.info.innerHTML = markup;
-};
-
-// генеруємо розмітку картки однієї країни
 const getCountryCardTemplate = ({ commonName, capital, population, flag, languages}) => `
     <div class="country-info__title-container">
         <img class="country-info__flag" alt="The Flag of ${commonName}" src=${flag} width='35px'>
@@ -93,12 +81,10 @@ const getCountryCardTemplate = ({ commonName, capital, population, flag, languag
         <li class="country-info__list-item"><span class="country-info__list-key">Languages:</span> ${languages}</li>
     </ul>`;
 
-// геренуємо розмітку рядка спику країни
+// list of conutries
 const getCountriesListItemTemplate = ({ commonName, flag }) => `
-    <li><img class="country-list__flag" width="35px" src=${flag} ><span>${commonName}</span></li>`;    
+    <li class="country-list__list-item"><img class="country-list__flag" width="35px" src=${flag} ><span>${commonName}</span></li>`;    
 
-
-// геренуємо і рендеримо розмітку спику країни
 const renderCountriesList = (response) => {
     let listMarkup = "";
 
@@ -114,7 +100,20 @@ const renderCountriesList = (response) => {
     refs.list.innerHTML = listMarkup;
 };
 
+// other funcs
 const clearHTML = () => {
     refs.list.innerHTML = "";
     refs.info.innerHTML = "";
 };
+
+const on404 = () => {
+    Notify.failure("Oops, there is no country with that name");
+};
+
+const onError = () => {
+    Notify.failure("Something went wrong. Please, check your internet connection, try again or try later.");
+};
+
+const onOverload = () => {
+    Notify.info('Too many matches found. Please enter a more specific name.');
+}
