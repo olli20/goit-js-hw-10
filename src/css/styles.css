@@ -12,29 +12,50 @@ body {
   line-height: 1.5;
 }
 
+.list {
+  list-style: none;
+  padding-left: 0px;
+  margin: 0px
+}
+
 #search-box {
   font: inherit;
+  font-size: 24px;
   padding: 8px;
-  max-width: 320px;
-  margin-bottom: 16px;
+  height: 60px;
+  min-width: 380px;
+  max-width: 500px;
+  margin-bottom: 10px;
 }
 
 .country-info__title-container {
   display: flex;
+  align-items: center;
+  margin-bottom: 40px;
 }
 
 .country-info__flag {
+  display: block;
   margin-right: 15px;
+  width: 35px;
 }
 
 .country-info__name {
   font-size: 45px;
   line-height: 1.5;
+  margin: 0px;
 }
 
 .country-info__list {
   list-style: none;
   font-weight: 400;
-      padding-left: 0px;
+  font-size: 24px;
+}
 
+.country-info__list-item:not(:last-child) {
+  margin-bottom: 15px;
+}
+
+.country-info__list-key {
+  font-weight: 700;
 }

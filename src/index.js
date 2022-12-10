@@ -1,91 +1,120 @@
 import './css/styles.css';
 var debounce = require('lodash.debounce');
 
+const DEBOUNCE_DELAY = 300;
+
 const refs = {
-    inputQuery: document.querySelector('#search-box'),
-    countriesList: document.querySelector('.country-list'),
-    countryInfo: document.querySelector('.country-info'),
+    input: document.querySelector('#search-box'),
+    list: document.querySelector('.country-list'),
+    info: document.querySelector('.country-info'),
 };
 
-const DEBOUNCE_DELAY = 300;
+
 const handleInput = (event) => {
     event.preventDefault();
-        const query = event.target.value.trim();
-        console.log(query);
-        fetchCountries(query)
-            .then(checkQuery)
-            .catch(error => console.log("Oops, there is no country with that name"));
+    
+    const query = event.target.value.trim();
+    console.log(query);
+
+    if (query === "") {
+        clearHTML();
+        return;
+    };
+
+    fetchCountries(query)
+        .then(handleResponse)
+        .catch(error => console.log("Error"));
 };
 
-refs.inputQuery.addEventListener('input', debounce(handleInput, DEBOUNCE_DELAY));
+refs.input.addEventListener('input', debounce(handleInput, DEBOUNCE_DELAY));
 
+
+
+
+// відправляємо запит і отримуємо відповідь сервера
 const fetchCountries = (query) => {
     return fetch(`https://restcountries.com/v3.1/name/${query}?fields=name,capital,population,flags,languages`)
         .then(r => r.json());
 };
 
-const checkQuery = (countriesList) => {
+// перевіряємо відповідь сервера і вибираємо дію
+const handleResponse = (response) => {
+    // якщо пришла помилка 404
 
-    console.log(countriesList);
-    console.log(countriesList.length);
 
-    if (countriesList.length === 1) {
-        refs.countriesList.innerHTML = "";
+    // якщо повернувся масив з однією країною
+    if (response.length === 1) {
 
-        // const languagesObj = Object.values(countriesList[0].languages);
-        // const languages   = languagesObj.join(", ");
+        // очищюємо в HTML елемент зі списком країн
+        refs.list.innerHTML = "";
 
+        // формуємо об'єкт з даними про країну
         const countryData = {
-            commonName: countriesList[0].name.common,
-            capital: countriesList[0].capital.join(", "),
-            population: countriesList[0].population,
-            flag: countriesList[0].flags.svg,
-            languages: Object.values(countriesList[0].languages).join(", "),
+            commonName: response[0].name.common,
+            capital: response[0].capital.join(", "),
+            population: response[0].population,
+            flag: response[0].flags.svg,
+            languages: Object.values(response[0].languages).join(", "),
         };
 
         renderCountryCard(countryData);
 
         console.log('One country ', countryData);
-    } else if (countriesList.length > 1 && countriesList.length <= 10) {
-        refs.countryInfo.innerHTML = "";
 
-        let listMarkup = "";
+    // якщо повернулось від 2 до 10 країн
+    } else if (response.length > 1 && response.length <= 10) {
+        refs.info.innerHTML = "";
 
-        for (i = 0; i < countriesList.length; i += 1) {
-            const data = {
-                commonName: countriesList[i].name.common,
-                flag: countriesList[i].flags.svg,
-            };
-
-            listMarkup += createCountriesListItem(data);
-        };
-
-        refs.countriesList.innerHTML = listMarkup;
+        renderCountriesList(response);
 
         console.log('2 - 10 countries ');
-    } else if (countriesList.length > 10) {        
+
+    // якщо повернулось більше 10 країн
+    } else if (response.length > 10) {        
         console.log('Too many matches found. Please enter a more specific name.');
     };
 };
 
-const renderCountryCard = ({ commonName, capital, population, flag, languages}) => {
-    const markup = `
+// рендеримо розмітку однієї країни
+const renderCountryCard = (countryData) => {
+    const markup = getCountryCardTemplate(countryData);
+    refs.info.innerHTML = markup;
+};
+
+// генеруємо розмітку картки однієї країни
+const getCountryCardTemplate = ({ commonName, capital, population, flag, languages}) => `
     <div class="country-info__title-container">
-        <img class="country-info__flag" src=${flag} width='35px'>
-        <h1 class="country-info__name">${commonName}<h1>
+        <img class="country-info__flag" alt="The Flag of ${commonName}" src=${flag} width='35px'>
+        <h1 class="country-info__name">${commonName}</h1>
     </div>
-    <ul class="country-info__list">
+    <ul class="country-info__list list">
         <li class="country-info__list-item"><span class="country-info__list-key">Capital:</span> ${capital}</li>
         <li class="country-info__list-item"><span class="country-info__list-key">Population:</span> ${population}</li>
         <li class="country-info__list-item"><span class="country-info__list-key">Languages:</span> ${languages}</li>
-    </ul>`
+    </ul>`;
 
-    refs.countryInfo.innerHTML = markup;
+// геренуємо розмітку рядка спику країни
+const getCountriesListItemTemplate = ({ commonName, flag }) => `
+    <li><img class="country-list__flag" width="35px" src=${flag} ><span>${commonName}</span></li>`;    
+
+
+// геренуємо і рендеримо розмітку спику країни
+const renderCountriesList = (response) => {
+    let listMarkup = "";
+
+    for (i = 0; i < response.length; i += 1) {
+        const data = {
+            commonName: response[i].name.common,
+            flag: response[i].flags.svg,
+        };
+
+        listMarkup += getCountriesListItemTemplate(data);
+    };
+
+    refs.list.innerHTML = listMarkup;
 };
 
-const createCountriesListItem = ({ commonName, flag }) => {
-    const markup = `
-        <li><img class="country-info__flag" src=${flag} width='35px'><span>${commonName}</span></li>
-    `;
-    return markup;
+const clearHTML = () => {
+    refs.list.innerHTML = "";
+    refs.info.innerHTML = "";
 };
