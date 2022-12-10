@@ -23,7 +23,18 @@ body {
   display: flex;
 }
 
+.country-info__flag {
+  margin-right: 15px;
+}
+
+.country-info__name {
+  font-size: 45px;
+  line-height: 1.5;
+}
+
 .country-info__list {
   list-style: none;
   font-weight: 400;
+      padding-left: 0px;
+
 }
