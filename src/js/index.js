@@ -73,12 +73,15 @@ const renderCountryCard = (response) => {
 
 // list of countries
 const getCountriesListItemTemplate = ({ officialName, flag }) => `
-    <li class="country-list__list-item"><img class="country-list__flag" alt="The Flag of ${officialName}" width="20px" src=${flag} ><span>${officialName}</span></li>`;    
+    <li class="country-list__list-item">
+        <img class="country-list__flag" alt="The Flag of ${officialName}" width="20px" src=${flag} >
+        <span>${officialName}</span>
+    </li>`;    
 
 const renderCountriesList = (response) => {
-    let listMarkup = "";
+    console.log(response);
 
-    for (i = 0; i < response.length; i += 1) {
+    for (let i = 0; i < response.length; i += 1) {
         const data = {
             officialName: response[i].name.official,
             flag: response[i].flags.svg,
