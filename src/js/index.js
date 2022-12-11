@@ -1,14 +1,12 @@
-import './css/styles.css';
+import '../css/styles.css';
 var debounce = require('lodash.debounce');
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import API from './fetch-countries';
+import getRefs from './get-refs';
 
 const DEBOUNCE_DELAY = 300;
 
-const refs = {
-    input: document.querySelector('#search-box'),
-    list: document.querySelector('.country-list'),
-    info: document.querySelector('.country-info'),
-};
+const refs = getRefs();
 
 const handleInput = (event) => {
     event.preventDefault();
@@ -20,18 +18,12 @@ const handleInput = (event) => {
         return;
     };
 
-    fetchCountries(query)
+    API.fetchCountries(query)
         .then(handleResponse)
         .catch(onError);
 };
 
 refs.input.addEventListener('input', debounce(handleInput, DEBOUNCE_DELAY));
-
-// fetch data
-const fetchCountries = (name) => {
-    return fetch(`https://restcountries.com/v3.1/name/${name}?fields=name,capital,population,flags,languages`)
-        .then(r => r.json());
-};
 
 const handleResponse = (response) => {
     if (response.status === 404) {
@@ -42,38 +34,23 @@ const handleResponse = (response) => {
 
     if (response.length === 1) {
         clearHTML();
-        const countryData = getCountryData(response);
-        renderCountryCard(countryData);
+        renderCountryCard(response);
 
     } else if (response.length > 1 && response.length <= 10) {
         clearHTML();
         renderCountriesList(response);
 
     } else if (response.length > 10) {        
-       onOverload();
+        onOverload();
     };
 };
 
-// one counttry card
-const renderCountryCard = (countryData) => {
-    const markup = getCountryCardTemplate(countryData);
-    refs.info.innerHTML = markup;
-};
 
-const getCountryData = (response) => {
-    return {
-            commonName: response[0].name.common,
-            capital: response[0].capital.join(", "),
-            population: response[0].population,
-            flag: response[0].flags.svg,
-            languages: Object.values(response[0].languages).join(", "),
-        };
-}
-
-const getCountryCardTemplate = ({ commonName, capital, population, flag, languages}) => `
+// one country card
+const getCountryCardTemplate = ({ officialName, capital, population, flag, languages}) => `
     <div class="country-info__title-container">
-        <img class="country-info__flag" alt="The Flag of ${commonName}" src=${flag} width='35px'>
-        <h1 class="country-info__name">${commonName}</h1>
+        <img class="country-info__flag" alt="The Flag of ${officialName}" src=${flag} width='20px'>
+        <h1 class="country-info__name">${officialName}</h1>
     </div>
     <ul class="country-info__list list">
         <li class="country-info__list-item"><span class="country-info__list-key">Capital:</span> ${capital}</li>
@@ -81,16 +58,29 @@ const getCountryCardTemplate = ({ commonName, capital, population, flag, languag
         <li class="country-info__list-item"><span class="country-info__list-key">Languages:</span> ${languages}</li>
     </ul>`;
 
-// list of conutries
-const getCountriesListItemTemplate = ({ commonName, flag }) => `
-    <li class="country-list__list-item"><img class="country-list__flag" width="35px" src=${flag} ><span>${commonName}</span></li>`;    
+const renderCountryCard = (response) => {
+    const countryData = {
+            officialName: response[0].name.official,
+            capital: response[0].capital.join(", "),
+            population: response[0].population,
+            flag: response[0].flags.svg,
+            languages: Object.values(response[0].languages).join(", "),
+        };
+
+    const markup = getCountryCardTemplate(countryData);
+    refs.info.innerHTML = markup;
+};
+
+// list of countries
+const getCountriesListItemTemplate = ({ officialName, flag }) => `
+    <li class="country-list__list-item"><img class="country-list__flag" alt="The Flag of ${officialName}" width="20px" src=${flag} ><span>${officialName}</span></li>`;    
 
 const renderCountriesList = (response) => {
     let listMarkup = "";
 
     for (i = 0; i < response.length; i += 1) {
         const data = {
-            commonName: response[i].name.common,
+            officialName: response[i].name.official,
             flag: response[i].flags.svg,
         };
 
@@ -107,11 +97,11 @@ const clearHTML = () => {
 };
 
 const on404 = () => {
-    Notify.failure("Oops, there is no country with that name");
+    Notify.failure('Oops, there is no country with that name');
 };
 
 const onError = () => {
-    Notify.failure("Something went wrong. Please, check your internet connection, try again or try later.");
+    Notify.failure('Something went wrong. Please, check your internet connection, try again or try later.');
 };
 
 const onOverload = () => {
