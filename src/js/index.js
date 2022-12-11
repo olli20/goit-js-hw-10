@@ -80,7 +80,6 @@ const getCountriesListItemTemplate = ({ officialName, flag }) => `
 
 const renderCountriesList = (response) => { 
     let listMarkup = "";
-    console.log(response);
 
     for (let i = 0; i < response.length; i += 1) {
         const data = {
@@ -90,7 +89,7 @@ const renderCountriesList = (response) => {
 
         listMarkup += getCountriesListItemTemplate(data);
     };
-
+    
     refs.list.innerHTML = listMarkup;
 };
 
