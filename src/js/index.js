@@ -30,7 +30,7 @@ const handleResponse = (response) => {
         clearHTML();
         on404();
         return;
-    }
+    };
 
     if (response.length === 1) {
         clearHTML();
