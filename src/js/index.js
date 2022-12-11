@@ -78,7 +78,8 @@ const getCountriesListItemTemplate = ({ officialName, flag }) => `
         <span>${officialName}</span>
     </li>`;    
 
-const renderCountriesList = (response) => {
+const renderCountriesList = (response) => { 
+    let listMarkup = "";
     console.log(response);
 
     for (let i = 0; i < response.length; i += 1) {
