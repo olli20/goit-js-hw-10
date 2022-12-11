@@ -105,7 +105,7 @@ const on404 = () => {
 };
 
 const onError = () => {
-    Notify.failure('Something went wrong. Please, check your internet connection, try again or try later.');
+    Notify.failure('Something went wrong. Please, check your internet connection.');
 };
 
 const onOverload = () => {
