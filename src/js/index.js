@@ -40,7 +40,8 @@ const handleResponse = (response) => {
         clearHTML();
         renderCountriesList(response);
 
-    } else if (response.length > 10) {        
+    } else if (response.length > 10) { 
+        clearHTML();
         onOverload();
     };
 };
